@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/data_plotter" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
