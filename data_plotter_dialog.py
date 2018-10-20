@@ -91,9 +91,14 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         self.figures[fig.number] = {}
         for i in range(len(ax)):
             self.figuresView.addItem("Figure %d.%d" % (fig.number, i))
+            idx = max(0, self.figuresView.count()-len(ax))
+            self.figuresView.setCurrentRow(idx)
+
             self.figures[fig.number][i] = ax[i]
             if self.grid.isChecked():
                 ax[i].grid()
+
+
 
     def plot_dbg(self):
         figuresStr = self.figuresView.currentItem().text()
@@ -115,7 +120,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         # More user friendly version
         # request.setSubsetOfAttributes([xfieldName, yfieldName],layer.fields())
         # Don't return geometry objects
-        
+
         request.setFlags(QgsFeatureRequest.NoGeometry)
         print("loading feature")
         pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
@@ -124,12 +129,18 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
             pts = [ [p[0].toDouble(), p[1].toDouble()] for p in pts]
         pts = np.asarray(pts)
 
-        figuresStr = self.figuresView.currentItem().text()
+        figuresStr = self.figuresView.currentItem()
+        if figuresStr is None:
+            self.new_figure()
+            figuresStr = self.figuresView.currentItem().text()
+        else:
+            figuresStr = figuresStr.text()
         fig, ax = (figuresStr.split(" ")[1]).split(".")
         print(fig, ax)
         ax = self.figures[int(fig)][int(ax)]
         # ax.plot(np.arange(1000), np.sin(np.arange(1000)/1000*np.pi))
-        ax.plot(pts[:,0], pts[:,1])
+        ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
+        ax.legend()
 
 
         # figNumber = self.figuresListe.currentData()
