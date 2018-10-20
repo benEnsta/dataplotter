@@ -86,7 +86,7 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>320</y>
+     <y>249</y>
      <width>83</width>
      <height>28</height>
     </rect>
@@ -98,8 +98,8 @@
   <widget class="QPushButton" name="btn_clean">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>360</y>
+     <x>100</x>
+     <y>249</y>
      <width>83</width>
      <height>28</height>
     </rect>
@@ -142,8 +142,8 @@
   <widget class="QPushButton" name="btn_newFigure">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>170</y>
+     <x>186</x>
+     <y>181</y>
      <width>83</width>
      <height>28</height>
     </rect>
@@ -155,7 +155,7 @@
   <widget class="QSpinBox" name="nrows">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>70</x>
      <y>180</y>
      <width>50</width>
      <height>29</height>
@@ -210,16 +210,6 @@
     <string>nrows</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="figuresListe">
-   <property name="geometry">
-    <rect>
-     <x>18</x>
-     <y>320</y>
-     <width>151</width>
-     <height>28</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
@@ -236,10 +226,10 @@
   <widget class="QListWidget" name="figuresView">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>390</y>
+     <x>10</x>
+     <y>320</y>
      <width>256</width>
-     <height>192</height>
+     <height>261</height>
     </rect>
    </property>
   </widget>

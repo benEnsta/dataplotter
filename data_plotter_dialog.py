@@ -67,9 +67,9 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
     def close_evt(self, evt):
         print("close event ", evt)
         print("detail: ", evt.canvas.figure.number)
-        idx = self.figuresListe.findData(evt.canvas.figure.number)
-        print("remove Figure %d" % idx)
-        self.figuresListe.removeItem(idx)
+        # idx = self.figuresListe.findData(evt.canvas.figure.number)
+        # print("remove Figure %d" % idx)
+        # self.figuresListe.removeItem(idx)
 
         items = self.figuresView.findItems("Figure %d" % evt.canvas.figure.number, Qt.MatchContains)
         print("items", items)
@@ -85,7 +85,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         fig, ax = plt.subplots(nrows, 1, sharex=self.sharex.isChecked())
         ax = [ax] if nrows == 1 else ax.tolist()
         print(ax)
-        self.figuresListe.addItem("Figure %d" % fig.number, fig.number)
+        # self.figuresListe.addItem("Figure %d" % fig.number, fig.number)
         fig.canvas.mpl_connect('close_event', self.close_evt)
         # if figureName == "":
         self.figures[fig.number] = {}
