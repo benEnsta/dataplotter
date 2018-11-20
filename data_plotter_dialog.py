@@ -8,7 +8,7 @@
                              -------------------
         begin                : 2018-09-20
         git sha              : $Format:%H$
-        copyright            : (C) 2018 by DGA Tn
+        copyright            : (C) 2018 by Benoit Desrochers
         email                : ben.ensta@gmail.com
  ***************************************************************************/
 
@@ -67,9 +67,6 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
     def close_evt(self, evt):
         print("close event ", evt)
         print("detail: ", evt.canvas.figure.number)
-        # idx = self.figuresListe.findData(evt.canvas.figure.number)
-        # print("remove Figure %d" % idx)
-        # self.figuresListe.removeItem(idx)
 
         items = self.figuresView.findItems("Figure %d" % evt.canvas.figure.number, Qt.MatchContains)
         print("items", items)
@@ -118,9 +115,8 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         request = QgsFeatureRequest()
 
         # More user friendly version
-        # request.setSubsetOfAttributes([xfieldName, yfieldName],layer.fields())
+        request.setSubsetOfAttributes([xfieldName, yfieldName],layer.fields())
         # Don't return geometry objects
-
         request.setFlags(QgsFeatureRequest.NoGeometry)
         print("loading feature")
         pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
@@ -138,16 +134,9 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         fig, ax = (figuresStr.split(" ")[1]).split(".")
         print(fig, ax)
         ax = self.figures[int(fig)][int(ax)]
-        # ax.plot(np.arange(1000), np.sin(np.arange(1000)/1000*np.pi))
         ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
         ax.legend()
 
-
-        # figNumber = self.figuresListe.currentData()
-        #
-        # plt.figure(figNumber)
-        # plt.plot(pts[:,0], pts[:,1])
-        # plt.plot(np.arange(1000), np.sin(10*np.arange(1000)/1000.*np.pi))
 if __name__ == '__main__':
     import sys
 
@@ -164,7 +153,7 @@ if __name__ == '__main__':
     # load providers
     qgs.initQgis()
 
-    vlayer = QgsVectorLayer("/home/bdesroch/winshare/ins_postPro/20180905_insraw/R_T2018_06_05_postpro.gpkg|layername=R_T2018_06_05_postpro", "layer_name_you_like", "ogr")
+    vlayer = QgsVectorLayer(sys.argv[1], "layer_name_you_like", "ogr")
     QgsProject.instance().addMapLayer(vlayer)
     # app = QApplication(sys.argv)
     dlg = DataPlotDialog(qgis.utils.iface)
