@@ -119,8 +119,12 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         # Don't return geometry objects
         request.setFlags(QgsFeatureRequest.NoGeometry)
         print("loading feature")
-        pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
+        if  self.checkBox_selected_feature.isChecked():
+            pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getSelectedFeatures(request)]
+        else:
+            pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
         print("convert to numpy")
+        print(pts)
         if isinstance(pts[0][0], QVariant):
             pts = [ [p[0].toDouble(), p[1].toDouble()] for p in pts]
         pts = np.asarray(pts)

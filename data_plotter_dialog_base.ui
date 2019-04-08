@@ -233,6 +233,19 @@
     </rect>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBox_selected_feature">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>140</y>
+     <width>201</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Selected Features Only</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
