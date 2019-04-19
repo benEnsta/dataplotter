@@ -68,8 +68,15 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
 
     @pyqtSlot(str)
     def on_mXFieldComboBox_currentTextChanged(self, s):
-        print(s)
-        
+        if s in ['date', 'time', 'timestamp']:
+            self.checkBox_utctimestamp.setChecked(True)
+        else:
+            self.checkBox_utctimestamp.setChecked(False)
+
+    @pyqtSlot()
+    def on_btn_extract_clicked():
+        ymin, ymax = axes.get_ylim()
+
 
 
     def close_evt(self, evt):
@@ -112,8 +119,24 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         ax = self.figures[int(fig)][int(ax)]
         ax.plot(np.arange(1000), np.sin(np.arange(1000)/1000*np.pi))
 
-    def plot(self):
+    def getFigureAxis(self, force=False):
+        """ return the figure axis from the figure list
+            if force is True, create a new figure if there is no
+            current figure selected
+        """
+        figuresStr = self.figuresView.currentItem()
+        if figuresStr is None:
+            if force is True:
+                self.new_figure()
+                figuresStr = self.figuresView.currentItem()
+            else:
+                return None        
+        figuresStr = figuresStr.text()
+        fig, ax = (figuresStr.split(" ")[1]).split(".")
+        ax = self.figures[int(fig)][int(ax)]
+        return ax
 
+    def plot(self):
         layer = self.mXFieldComboBox.layer()
         xfieldName = self.mXFieldComboBox.currentField()
         yfieldName = self.mYFieldComboBox.currentField()
@@ -137,17 +160,9 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
             pts = [ [p[0].toDouble(), p[1].toDouble()] for p in pts]
         pts = np.asarray(pts)
 
-        figuresStr = self.figuresView.currentItem()
-        if figuresStr is None:
-            self.new_figure()
-            figuresStr = self.figuresView.currentItem().text()
-        else:
-            figuresStr = figuresStr.text()
-        fig, ax = (figuresStr.split(" ")[1]).split(".")
-        print(fig, ax)
-        ax = self.figures[int(fig)][int(ax)]
+        ax = self.getFigureAxis(force=True)
         axfmt = ax.xaxis.get_major_formatter()
-        if self.checkbox_utctimestamp.isChecked():
+        if self.checkBox_utctimestamp.isChecked():
             if not isinstance(axfmt, md.DateFormatter):
                 xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
                 ax.xaxis.set_major_formatter(xfmt)
@@ -158,7 +173,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
             if isinstance(axfmt, matplotlib.ticker.ScalarFormatter):
                 ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
             else:
-                QMessageBox.warning(self, "Datetime axis", "invalid plot. You cannot plot a non time serie graph under a time series graph")
+                QMessageBox.warning(self, "Datetime axis", "invalid plot.\n You cannot plot a non time serie graph under a time series graph")
         ax.legend()
 
 if __name__ == '__main__':
