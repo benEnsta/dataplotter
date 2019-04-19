@@ -28,7 +28,9 @@ import matplotlib
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as md
+import matplotlib
+import datetime as dt
 import numpy as  np
 
 from qgis.PyQt import uic
@@ -38,8 +40,8 @@ from qgis.core import QgsFeatureRequest
 
 from qgis.PyQt.QtGui import QStandardItemModel
 from qgis.PyQt.QtGui import QStandardItem
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtWidgets import QApplication, QMessageBox
+from qgis.PyQt.QtCore import Qt, QVariant, pyqtSlot
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'data_plotter_dialog_base.ui'))
@@ -61,8 +63,14 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         # self.btn_plot.clicked.connect(self.plot_dbg)
 
         self.btn_newFigure.clicked.connect(self.new_figure)
-
+        # self.btn_extract
         self.figures = {}
+
+    @pyqtSlot(str)
+    def on_mXFieldComboBox_currentTextChanged(self, s):
+        print(s)
+        
+
 
     def close_evt(self, evt):
         print("close event ", evt)
@@ -138,7 +146,19 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         fig, ax = (figuresStr.split(" ")[1]).split(".")
         print(fig, ax)
         ax = self.figures[int(fig)][int(ax)]
-        ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
+        axfmt = ax.xaxis.get_major_formatter()
+        if self.checkbox_utctimestamp.isChecked():
+            if not isinstance(axfmt, md.DateFormatter):
+                xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+                ax.xaxis.set_major_formatter(xfmt)
+                ax.tick_params(axis='x', labelrotation=25)
+            t = list(map(dt.datetime.utcfromtimestamp, pts[:,0]))
+            ax.plot(t, pts[:,1], label=layer.name() + " " + yfieldName)        
+        else:
+            if isinstance(axfmt, matplotlib.ticker.ScalarFormatter):
+                ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
+            else:
+                QMessageBox.warning(self, "Datetime axis", "invalid plot. You cannot plot a non time serie graph under a time series graph")
         ax.legend()
 
 if __name__ == '__main__':
