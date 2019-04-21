@@ -74,10 +74,33 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
             self.checkBox_utctimestamp.setChecked(False)
 
     @pyqtSlot()
-    def on_btn_extract_clicked():
-        ymin, ymax = axes.get_ylim()
+    def on_btn_extract_clicked(self):
+        ax = self.getSelectedFigureAxis()
+        if ax is None:
+            return
+        axfmt = ax.xaxis.get_major_formatter()
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        msg = "Limits\nx:\n"
+        if isinstance(axfmt, md.DateFormatter):
+            xmin, xmax = md.num2date(xmin), md.num2date(xmax)
+            msg += "{} ({})\n".format(xmin.strftime("%m/%d %H:%M:%S.%f"), xmin.timestamp() )
+            msg += "{} ({})\n".format(xmin.strftime("%m/%d %H:%M:%S.%f"), xmax.timestamp() )
+            xmin, xmax = xmin.timestamp(), xmax.timestamp()
+        else:
+            msg += "\t{}\n".format(xmin)
+            msg += "\t{}\n".format(xmax)
+        msg += "y:\n"
+        msg += "{}\n{}\n".format(ymin, ymax)   
 
-
+        reply = QMessageBox.question(self, "Cliping layer with axis bounds ?", msg, QMessageBox.Yes|QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            layer = self.mXFieldComboBox.layer()
+            xfieldName = self.mXFieldComboBox.currentField()
+            print("Xfield ", xfieldName, "layer", layer.name())
+            s = "\"{}\" > {} and \"{}\" < {}".format(xfieldName, xmin,xfieldName,  xmax)
+            print(s)
+            layer.setSubsetString(s)
 
     def close_evt(self, evt):
         print("close event ", evt)
@@ -119,7 +142,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         ax = self.figures[int(fig)][int(ax)]
         ax.plot(np.arange(1000), np.sin(np.arange(1000)/1000*np.pi))
 
-    def getFigureAxis(self, force=False):
+    def getSelectedFigureAxis(self, force=False):
         """ return the figure axis from the figure list
             if force is True, create a new figure if there is no
             current figure selected
@@ -149,23 +172,28 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         request.setSubsetOfAttributes([xfieldName, yfieldName],layer.fields())
         # Don't return geometry objects
         request.setFlags(QgsFeatureRequest.NoGeometry)
-        print("loading feature")
+        # print("loading feature")
         if  self.checkBox_selected_feature.isChecked():
             pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getSelectedFeatures(request)]
         else:
             pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
-        print("convert to numpy")
-        print(pts)
+        # print("convert to numpy")
+        # print(pts)
         if isinstance(pts[0][0], QVariant):
             pts = [ [p[0].toDouble(), p[1].toDouble()] for p in pts]
         pts = np.asarray(pts)
 
-        ax = self.getFigureAxis(force=True)
+        ax = self.getSelectedFigureAxis(force=True)
         axfmt = ax.xaxis.get_major_formatter()
         if self.checkBox_utctimestamp.isChecked():
             if not isinstance(axfmt, md.DateFormatter):
-                xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+            # if not isinstance(axfmt, md.AutoDateFormatter):
+
+                # locator = md.AutoDateLocator()
+                # formatter = md.AutoDateFormatter(locator, defaultfmt='%m-%d %H:%M:%S.%f')
+                xfmt = md.DateFormatter('%m-%d %H:%M:%S')
                 ax.xaxis.set_major_formatter(xfmt)
+                # ax.xaxis.set_major_formatter(formatter)
                 ax.tick_params(axis='x', labelrotation=25)
             t = list(map(dt.datetime.utcfromtimestamp, pts[:,0]))
             ax.plot(t, pts[:,1], label=layer.name() + " " + yfieldName)        
