@@ -174,14 +174,17 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         request.setFlags(QgsFeatureRequest.NoGeometry)
         # print("loading feature")
         if  self.checkBox_selected_feature.isChecked():
-            pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getSelectedFeatures(request)]
+            pts = [ tuple([f[xfieldName], f[yfieldName]]) for f in layer.getSelectedFeatures(request)]
         else:
-            pts = [ [f[xfieldName], f[yfieldName]] for f in layer.getFeatures(request)]
+            pts = [ tuple([f[xfieldName], f[yfieldName]]) for f in layer.getFeatures(request)]
         # print("convert to numpy")
         # print(pts)
         if isinstance(pts[0][0], QVariant):
-            pts = [ [p[0].toDouble(), p[1].toDouble()] for p in pts]
-        pts = np.asarray(pts)
+            pts = [ tuple([p[0].toDouble(), p[1].toDouble()]) for p in pts]
+        # elif isinstance(pts[0][0], str):
+
+        pts = np.asarray(pts, dtype=np.dtype([("x", np.float), ("y", np.float)]))
+        pts = np.sort(pts, order="x")
 
         ax = self.getSelectedFigureAxis(force=True)
         axfmt = ax.xaxis.get_major_formatter()
@@ -195,11 +198,11 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
                 ax.xaxis.set_major_formatter(xfmt)
                 # ax.xaxis.set_major_formatter(formatter)
                 ax.tick_params(axis='x', labelrotation=25)
-            t = list(map(dt.datetime.utcfromtimestamp, pts[:,0]))
-            ax.plot(t, pts[:,1], label=layer.name() + " " + yfieldName)        
+            t = list(map(dt.datetime.utcfromtimestamp, pts["x"]))
+            ax.plot(t, pts["y"], label=layer.name() + " " + yfieldName)        
         else:
             if isinstance(axfmt, matplotlib.ticker.ScalarFormatter):
-                ax.plot(pts[:,0], pts[:,1], label=layer.name() + " " + yfieldName)
+                ax.plot(pts["x"], pts["y"], label=layer.name() + " " + yfieldName)
             else:
                 QMessageBox.warning(self, "Datetime axis", "invalid plot.\n You cannot plot a non time serie graph under a time series graph")
         ax.legend()
