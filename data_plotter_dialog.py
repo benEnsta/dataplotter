@@ -30,6 +30,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import matplotlib
+
 import datetime as dt
 import numpy as  np
 
@@ -68,6 +69,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
 
     @pyqtSlot(str)
     def on_mXFieldComboBox_currentTextChanged(self, s):
+        """Is the field name is a time, check utctimestamp"""
         if s in ['date', 'time', 'timestamp']:
             self.checkBox_utctimestamp.setChecked(True)
         else:
@@ -97,29 +99,31 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         if reply == QMessageBox.Yes:
             layer = self.mXFieldComboBox.layer()
             xfieldName = self.mXFieldComboBox.currentField()
-            print("Xfield ", xfieldName, "layer", layer.name())
+            # print("Xfield ", xfieldName, "layer", layer.name())
             s = "\"{}\" > {} and \"{}\" < {}".format(xfieldName, xmin,xfieldName,  xmax)
-            print(s)
+            # print(s)
             layer.setSubsetString(s)
 
     def close_evt(self, evt):
-        print("close event ", evt)
-        print("detail: ", evt.canvas.figure.number)
+        # print("close event ", evt)
+        # print("detail: ", evt.canvas.figure.number)
 
         items = self.figuresView.findItems("Figure %d" % evt.canvas.figure.number, Qt.MatchContains)
-        print("items", items)
+        # print("items", items)
         for item in items:
             print("remove ", item.text())
             self.figuresView.removeItemWidget(item)
             self.figuresView.takeItem(self.figuresView.row(item))
+            
 
     def new_figure(self):
         nrows = self.nrows.value()
         # figureName = self.figuresListe.currentText()
-        print(nrows)
+        # print(nrows)
         fig, ax = plt.subplots(nrows, 1, sharex=self.sharex.isChecked())
+
         ax = [ax] if nrows == 1 else ax.tolist()
-        print(ax)
+        # print(ax)
         # self.figuresListe.addItem("Figure %d" % fig.number, fig.number)
         fig.canvas.mpl_connect('close_event', self.close_evt)
         # if figureName == "":
@@ -138,7 +142,7 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
     def plot_dbg(self):
         figuresStr = self.figuresView.currentItem().text()
         fig, ax = (figuresStr.split(" ")[1]).split(".")
-        print(fig, ax)
+        # print(fig, ax)
         ax = self.figures[int(fig)][int(ax)]
         ax.plot(np.arange(1000), np.sin(np.arange(1000)/1000*np.pi))
 
@@ -178,10 +182,11 @@ class DataPlotDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             pts = [ tuple([f[xfieldName], f[yfieldName]]) for f in layer.getFeatures(request)]
         # print("convert to numpy")
-        # print(pts)
+        
         if isinstance(pts[0][0], QVariant):
             pts = [ tuple([p[0].toDouble(), p[1].toDouble()]) for p in pts]
-        # elif isinstance(pts[0][0], str):
+        elif isinstance(pts[0][0], str):
+            pts = [ tuple([dt.datetime.strptime(p[0]+" +0000", "%d/%m/%Y %H:%M:%S %z").timestamp(), p[1]]) for p in pts]
 
         pts = np.asarray(pts, dtype=np.dtype([("x", np.float), ("y", np.float)]))
         pts = np.sort(pts, order="x")
